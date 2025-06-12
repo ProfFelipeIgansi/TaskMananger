@@ -1,5 +1,13 @@
 package com.taskmanager.activity
 
+import androidx.compose.animation.animateColor
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.VectorConverter
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.animateValue
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
@@ -10,11 +18,13 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -24,6 +34,15 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.taskmanager.activity.viewmodel.TaskListViewModel
@@ -66,13 +85,23 @@ fun TaskList(
         ),
     )
 
+    val borderProgressAnimation by transition.animateFloat(
+        initialValue = 0.5f,
+        targetValue = 1.5f,
+        animationSpec = infiniteRepeatable(
+            repeatMode = RepeatMode.Reverse,
+            animation = tween(1200)
+        ),
+    )
+
     Column(
         modifier = Modifier
             .padding(padding)
             .fillMaxWidth()
     ) {
         if (showAlertDialog) {
-            AlertDialog(onDismissRequest = { listViewModel.setShowAlertDialog(false) },
+            AlertDialog(
+                onDismissRequest = { listViewModel.setShowAlertDialog(false) },
                 confirmButton = {
                     Button(onClick = {
                         listViewModel.deleteTask(selectItem)
@@ -93,9 +122,32 @@ fun TaskList(
                 tasks.forEach { task ->
                     item {
                         Card(
+                            colors = CardDefaults.cardColors(containerColor = Color.Transparent),
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(10.dp)
+                                .drawBehind {
+                                    drawRoundRect(
+                                        brush = Brush.linearGradient(
+                                            colors = listOf(
+                                                Color.Red,
+                                                Color.Yellow,
+                                                Color.Green
+                                            ),
+                                            start = Offset(0f, 0f),
+                                            end = Offset(
+                                                size.width * borderProgressAnimation,
+                                                size.height
+                                            ),
+                                        ),
+                                        size = Size(width = size.width, size.height),
+                                        style = Stroke(
+                                            width = 5.dp.toPx(),
+                                            cap = StrokeCap.Round
+                                        ),
+                                        cornerRadius = CornerRadius(x = 10.dp.toPx()),
+                                    )
+                                }
                                 .combinedClickable(
                                     onClick = {
                                         localTaskData.saveID(Constants.TASK_KEY, task.id)
