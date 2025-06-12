@@ -45,6 +45,27 @@ fun TaskList(
     val showAlertDialog by listViewModel.showAlertDialog.collectAsState()
     val selectItem by listViewModel.selectItem.collectAsState()
 
+    val transition = rememberInfiniteTransition()
+    val fabColorAnimation by transition.animateColor(
+        initialValue = Color.Red,
+        targetValue = Color.Green,
+        animationSpec = infiniteRepeatable(
+            repeatMode = RepeatMode.Reverse,
+            animation = tween(2000)
+        ),
+        label = ""
+    )
+
+    val fabBorderAnimation by transition.animateValue(
+        typeConverter = Dp.VectorConverter,
+        initialValue = 10.dp,
+        targetValue = 15.dp,
+        animationSpec = infiniteRepeatable(
+            repeatMode = RepeatMode.Reverse,
+            animation = tween(500)
+        ),
+    )
+
     Column(
         modifier = Modifier
             .padding(padding)
@@ -129,7 +150,12 @@ fun TaskList(
             .padding(10.dp),
         contentAlignment = Alignment.BottomEnd
     ) {
-        FloatingActionButton(onClick = { navController.navigate(Routes.TaskAdd.route) }) {
+        FloatingActionButton(
+            onClick = { navController.navigate(Routes.TaskAdd.route) },
+            containerColor = fabColorAnimation,
+            shape = RoundedCornerShape(fabBorderAnimation),
+            contentColor = Color.Black
+        ) {
             Icon(Icons.Default.Add, contentDescription = null)
         }
     }
